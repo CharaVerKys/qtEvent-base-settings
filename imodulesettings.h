@@ -4,6 +4,7 @@
 #include <defines.h>
 #include <qfile.h>
 
+#define strong_ordering_equal 0
 #define VALIDATE_MODULE_PTR_TYPE \
     assert(this); \
     assert(0== std::strcmp(this->moduleName,MODULENAME_DEFINED));
@@ -13,19 +14,19 @@ class IModuleSettings
 public:
     IModuleSettings();
     virtual ~IModuleSettings(){}
-    const char* getModuleName()const {assert(moduleName); return moduleName;}
-    eSettingsModulesNames getModuleEnum()const {assert(moduleEnum != eSettingsModulesNames::eNotSetted); return moduleEnum;}
+    std::string_view getModuleName()const {assert(not moduleName.empty()); return moduleName;}
+    SettingsModulesNames getModuleEnum()const {assert(moduleEnum != SettingsModulesNames::NotSetted); return moduleEnum;}
 
     virtual bool isValidPtr() = 0;
-    virtual bool readFromFile(QFile& stream);
-    void writeToFile(std::string path); // actually do nothing, only set target path
+    bool readFromFile(QFile& stream);
+    void setWritePath(std::string const& path); // actually do nothing, only set target path
     virtual QJsonObject getJson() const = 0;
     virtual bool setValuesOnJsonString(const char* jsonStr) = 0;
-    virtual bool flush() const;
+    bool flush() const; // actual function for write in file
 
 protected:
-    const char* moduleName = nullptr;
-    eSettingsModulesNames moduleEnum = eSettingsModulesNames::eNotSetted;
+    std::string_view moduleName;
+    SettingsModulesNames moduleEnum = SettingsModulesNames::NotSetted;
     std::string path;
 };
 

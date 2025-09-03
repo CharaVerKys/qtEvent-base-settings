@@ -4,7 +4,8 @@
 #include <QStandardPaths>
 #include <qdir.h>
 
-#include <randomemodulesettings.h>
+#include <module1.h>
+#include <module2.h>
 
 const QEvent::Type EventSettingsChanged::settingsChanged = static_cast<QEvent::Type>(QEvent::registerEventType());
 
@@ -13,7 +14,8 @@ constexpr uint64_t operator""_id(unsigned long long value) {
 }
 
 void Settings::initHolderSetModules()noexcept{
-    holderSetModules[1_id] = std::make_unique<RandomModuleSettings>(RandomModuleSettings());
+    holderSetModules[1_id] = std::make_unique<module1>(module1());
+    holderSetModules[2_id] = std::make_unique<module2>(module2());
 }
 
 Settings::Settings()
@@ -134,7 +136,7 @@ void Settings::setPathsForSettings() noexcept
     for(auto& module : allModules){
         assert(module.first not_eq SettingsModulesNames::NotSetted);
         std::string path = getSettingsVariant(true,std::string(module.second->getModuleName()));
-        module.second->writeToFile(path);
+        module.second->setWritePath(path);
     }
 }
 

@@ -1,18 +1,12 @@
 #ifndef MODULE1_H
 #define MODULE1_H
 
-#include <QObject>
+#include <imodulesettings.h>
 
-class module1 : public QObject
+class module1 : public IModuleSettings
 {
     Q_OBJECT
 public:
-    explicit module1(QObject *parent = nullptr){}
-
-signals:
-    void settingsChangeResult(id_t id, bool success, const char* moduleName = nullptr, const char* paramName = nullptr);
-protected:
-    bool event(QEvent* event);
 
 };
 

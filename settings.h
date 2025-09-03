@@ -12,35 +12,42 @@
 ## guideline:
 1. init settings, noting special
 2. settings-setter (aka setter) want to change settings
-3. he remember old setting params and push them to module and emit signal change settings
-4. setter blocking next settings-send event (other-way should support multiple settings events) and wait for answer
-5. Settings:: posting events to settings-receivers (aka receivers)
+3. he remember old setting params and push new settings to module and emit signal change settings
+4. setter blocking next settings-send event (or support multiple settings events indexes) and wait for answer
+5. Settings:: invoke onSettingsChanged on settings-receivers (aka receivers)
 6. receivers validate input settings and if pass returns true, or if validate fails return false + module name and reason
 7. setter receive success and (if he want) 'flush()' module to write settings to file
-7.5 if received fail then revers settings and emit changeSettings again
+7.5 if received fail then revers settings and emit changeSettings again, to restore last valid state
 */
 
-
-
+// !!!!!!!!!!!!!!
+#define numOfModules 9
+// !!!!!!!!!!!!!!
 
 // type check
+// c++17, if you use c++20 you can replace this with concept
 template<typename T>
-class has_settingsChangeResult
+class fit_settingsSignalSlot
 {
 private:
     template<typename U>
-    static auto test(int) -> decltype(std::declval<U>().settingsChangeResult(
+    static auto testSignal(int) -> decltype(std::declval<U>().settingsChangeResult(
                                           std::declval<id_t>(),
                                           std::declval<bool>(),
                                             std::declval<const char*>(),
                                             std::declval<const char*>()
                                           ), std::true_type{});
+    template<typename U>
+    static auto testSlot(int) -> decltype(std::declval<U>().settingsChangeResult(), std::true_type{});
+    //comma operator btw
 
     template<typename>
-    static std::false_type test(...);
+    static std::false_type testSignal(...);
+    template<typename>
+    static std::false_type testSlot(...);
 
 public:
-    static constexpr bool value = decltype(test<T>(0))::value;
+    static constexpr bool value = decltype(testSignal<T>(0))::value and decltype(testSlot<T>(0))::value;
 };
 // type check
 
@@ -77,7 +84,7 @@ public:
 
     ////////////////////////////
     template<typename QObject_typename>
-    std::enable_if_t<has_settingsChangeResult<QObject_typename>::value, void>
+    std::enable_if_t<fit_settingsSignalSlot<QObject_typename>::value, void>
     registerObjectAsSettingsChangedEventHandler(QObject_typename *object)
     {
         std::lock_guard lock(*mutex);
@@ -87,15 +94,16 @@ public:
     }
 
     template<typename QObject_typename>
-    std::enable_if_t<!has_settingsChangeResult<QObject_typename>::value, void>
+    std::enable_if_t<!fit_settingsSignalSlot<QObject_typename>::value, void>
     registerObjectAsSettingsChangedEventHandler(QObject_typename *object)
     {
         (void)object;
-        static_assert(has_settingsChangeResult<QObject_typename>::value, "Object does not have the required signal: settingsChangeResult");
+        static_assert(fit_settingsSignalSlot<QObject_typename>::value, "Object does not have the required signal {settingsChangeResult} or slot {onChangeSettings}");
     }
 ////////////////////////////
 
-    ModuleLockFreePair getRandomModuleSettings();
+    ModuleLockFreePair getModule1();
+    ModuleLockFreePair getModule2();
 
     static id_t getNewId(){
         static std::atomic<uint> idGen = 0;
@@ -126,7 +134,6 @@ private:
     std::vector<QObject*> eventSetChangedReceivers;
     std::atomic<bool> loaded = false;
 
-    #define numOfModules 9
     std::array<std::unique_ptr<IModuleSettings>, numOfModules> holderSetModules;
 }; // end of class Settings
 
@@ -134,4 +141,5 @@ struct changeResult{
     bool success = true; const char *moduleName = nullptr; const char *paramName = nullptr;
 };
 
+#undef numOfModules
 #endif // SETTINGS_H

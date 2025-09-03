@@ -3,10 +3,11 @@
 
 enum class SettingsModulesNames{
     NotSetted = 0,
-    RandomName
+    Module1,
+    Module2,
 };
 
-//your checkThread, if want
+//your checkThread, if want to, see my some-repeatable-code if want my impl
 #define checkThread(val) (void*)val
 extern void* mainThreadID;
 

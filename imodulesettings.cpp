@@ -19,7 +19,7 @@ bool IModuleSettings::readFromFile(QFile& stream){
     }
 }
 
-void IModuleSettings::writeToFile(const std::string &path){
+void IModuleSettings::setWritePath(std::string const& path){
     this->path = path;
 }
 
@@ -33,20 +33,10 @@ bool IModuleSettings::flush() const{
     auto js = getJson();
     QJsonDocument doc(js);
     errno = 0;
-#ifndef NDEBUG
-    bool result = [&stream]()->bool{stream.seekp(0, std::ios::end);size_t end = stream.tellp();stream.seekp(0, std::ios::beg);/*useless func call in valid context*/return end == 0;}();
-    assert(result);
-#endif
     if (stream << doc.toJson().toStdString(); errno) {
         qCritical() << "UserMsg Failed to write data to file. Error: " << strerror(errno);
-#ifndef NDEBUG
-        // cppcheck-suppress shadowVariable
-        bool result = [&stream, size = js.size()]()->bool{stream.seekp(0, std::ios::end);size_t end = stream.tellp();stream.seekp(0, std::ios::beg);/*useless func call in valid context*/return end == (size_t)size;}();
-        assert(result);
-#endif
         return true;
-    }else{
-        qInfo() << "UserMsg Settings saved to file. " << std::strerror(errno);
-        return false;
     }
+    qInfo() << "UserMsg Settings saved to file.";
+    return false;
 }
