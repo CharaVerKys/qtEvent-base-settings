@@ -18,11 +18,9 @@ add_executable(settings_test
   main.cpp
   module2.cpp
   module1.cpp
-  module2.h
-  module1.h
   settings.cpp
-  settings.h
-  imodulesettings.h
-  defines.h
+  imodulesettings.cpp
+  settingsSenderTemplate.cpp
+  settingsReceiverTemplate.cpp
 )
 target_link_libraries(settings_test Qt${QT_VERSION_MAJOR}::Core)

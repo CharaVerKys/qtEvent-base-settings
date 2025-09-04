@@ -10,8 +10,7 @@ bool IModuleSettings::readFromFile(QFile& stream){
     }
     try{
         std::string str = stream.readAll().toStdString();
-        setValuesOnJsonString(str.c_str()); // ? string view
-        return false;
+        return setValuesOnJsonString(str.c_str()); // ? string view
     } catch (const std::exception & e) {
         qWarning() << (QString("UserMsg Исключение в IModuleSettings::readFromFile: %1").arg(e.what()));
         setValuesOnJsonString("prompt_setOnDefault");

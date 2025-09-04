@@ -5,9 +5,13 @@
 
 class module1 : public IModuleSettings
 {
-    Q_OBJECT
 public:
+    module1();
+    QJsonObject getJson() const final;
+    bool setValuesOnJsonString(const std::string_view jsonStr) final;
+    bool isValidPtr() const final;
 
+    int value;
 };
 
 #endif // MODULE1_H

@@ -21,8 +21,10 @@
 */
 
 // !!!!!!!!!!!!!!
-#define numOfModules 9
+#define numOfModules 2
 // !!!!!!!!!!!!!!
+
+static_assert(std::is_same_v<id_t,std::uint32_t>,"define own id_t = uint32_t; or idk, change every id_t to your one");
 
 // type check
 // c++17, if you use c++20 you can replace this with concept
@@ -38,7 +40,7 @@ private:
                                             std::declval<const char*>()
                                           ), std::true_type{});
     template<typename U>
-    static auto testSlot(int) -> decltype(std::declval<U>().settingsChangeResult(), std::true_type{});
+    static auto testSlot(int) -> decltype(std::declval<U>().onSettingsChanged(std::declval<id_t>()), std::true_type{});
     //comma operator btw
 
     template<typename>
@@ -53,17 +55,7 @@ public:
 
 struct changeResult;
 
-class EventSettingsChanged : public QEvent{
-public:
-    static const QEvent::Type settingsChanged;
-    // cppcheck-suppress noExplicitConstructor
-    EventSettingsChanged(id_t id) : QEvent(settingsChanged), id(id){}
-    id_t getId(){return id;}
-private:
-    id_t id;
-};
-
-struct ModuleLockFreePair{
+struct ModuleMutexPair{
     IModuleSettings* setModule; // point of your module
     std::mutex* mutex; // global settings access mutex
 };
@@ -98,15 +90,15 @@ public:
     registerObjectAsSettingsChangedEventHandler(QObject_typename *object)
     {
         (void)object;
-        static_assert(fit_settingsSignalSlot<QObject_typename>::value, "Object does not have the required signal {settingsChangeResult} or slot {onChangeSettings}");
+        static_assert(fit_settingsSignalSlot<QObject_typename>::value, "Object does not have the required signal {settingsChangeResult} or slot {onSettingsChanged}");
     }
 ////////////////////////////
 
-    ModuleLockFreePair getModule1();
-    ModuleLockFreePair getModule2();
+    ModuleMutexPair getModule1();
+    ModuleMutexPair getModule2();
 
     static id_t getNewId(){
-        static std::atomic<uint> idGen = 0;
+        static std::atomic<id_t> idGen = 0;
         return idGen++;
     }
 
@@ -114,14 +106,14 @@ signals:
     void settingsChangeResult(id_t id, bool success, const char* moduleName = nullptr, const char* paramName = nullptr);
 
 public slots:
-    void changeSettings(uint id);
+    void changeSettings(id_t id);
 
 private slots:
     void resultFromObject(id_t id, bool success, const char* moduleName = nullptr, const char* paramName = nullptr);
 
 private:
     Settings();
-    ModuleLockFreePair createReturnSetPair(IModuleSettings* modSet) noexcept;
+    ModuleMutexPair createReturnSetPair(IModuleSettings* modSet) noexcept;
     void setPathsForSettings() noexcept;
     std::string getSettingsVariant(bool forSave, const std::string& moduleName) noexcept;
     void initHolderSetModules() noexcept;

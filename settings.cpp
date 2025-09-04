@@ -1,13 +1,10 @@
 #include "settings.h"
-#include <QCoreApplication>
 #include <QJsonDocument>
 #include <QStandardPaths>
 #include <qdir.h>
 
 #include <module1.h>
 #include <module2.h>
-
-const QEvent::Type EventSettingsChanged::settingsChanged = static_cast<QEvent::Type>(QEvent::registerEventType());
 
 constexpr uint64_t operator""_id(unsigned long long value) {
     return value - 1;
@@ -76,15 +73,18 @@ bool Settings::loadSettings()
     return true;
 }
 
-ModuleLockFreePair Settings::getRandomModuleSettings()
-{
+ModuleMutexPair Settings::getModule1(){
     assert(loaded.load());
-    return createReturnSetPair(allModules[SettingsModulesNames::RandomName]);
+    return createReturnSetPair(allModules[SettingsModulesNames::Module1]);
+}
+ModuleMutexPair Settings::getModule2(){
+    assert(loaded.load());
+    return createReturnSetPair(allModules[SettingsModulesNames::Module2]);
 }
 
-ModuleLockFreePair Settings::createReturnSetPair(IModuleSettings *modSet) noexcept
+ModuleMutexPair Settings::createReturnSetPair(IModuleSettings *modSet) noexcept
 {
-    ModuleLockFreePair pair;
+    ModuleMutexPair pair;
     pair.mutex = mutex;
     pair.setModule = modSet;
     return pair;
@@ -101,7 +101,7 @@ void Settings::changeSettings(uint id)
     transactionObjectsRemain.emplace(id, __null);
     transactionObjectsRemain.at(id) = eventSetChangedReceivers.size();
     for(auto object : eventSetChangedReceivers){
-        QCoreApplication::postEvent(object, new EventSettingsChanged(id));
+        QMetaObject::invokeMethod(object,"onSettingsChanged",Qt::QueuedConnection,Q_ARG(id_t,id));
     }
     if(eventSetChangedReceivers.empty()){
         emit settingsChangeResult(id, true);
