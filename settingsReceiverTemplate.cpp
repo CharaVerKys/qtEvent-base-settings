@@ -9,7 +9,7 @@ void SettingsReceiver::onSettingsChanged(id_t id)
     ModuleMutexPair module2_pair = Settings::getGlobInstance()->getModule2();
     module1* mod1 = static_cast<module1*>(module1_pair.setModule);
     // static means no dynamic, so for better correctness check with isValidPtr() /would be no-op in release, if not check return value/
-    mod1->isValidPtr();
+    mod1->isValidPtr();// maybe this is ub to call member function on different type, but its fine for any known implementation, just use dynamic_cast + assert(ptr), if you are not fine with it
 
                 // dynamic is additional runtime..
     module2* mod2 = dynamic_cast<module2*>(module2_pair.setModule);
