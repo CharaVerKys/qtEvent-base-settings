@@ -1,5 +1,6 @@
 #include "settingsSenderTemplate.h"
 
+#include <QDebug>
 #include <QCoreApplication>
 
 #include <settings.h>

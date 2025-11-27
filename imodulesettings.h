@@ -6,8 +6,10 @@
 
 #define strong_ordering_equal 0
 #define VALIDATE_MODULE_PTR_TYPE \
-    assert(this); \ // no guarantee when nullptr btw
-    assert(strong_ordering_equal == this->moduleName.compare(MODULENAME_DEFINED)); // yes this is ub to call member on different type, but its fine for any known implementation, just use dynamic_cast + assert(ptr), if you are not fine with it
+    assert(this); \
+    assert(strong_ordering_equal == this->moduleName.compare(MODULENAME_DEFINED)); 
+// no guarantee for assert(this) when nullptr btw
+// yes this is ub to call member on different type, but its fine for any known implementation, just use dynamic_cast + assert(ptr), if you are not fine with it
 
 class IModuleSettings
 {
